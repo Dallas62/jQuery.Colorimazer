@@ -24,30 +24,66 @@
 
 (function($)
 {
+    function RGBtoHSV(r, g, b) {
+        var min = Math.min(r, g, b);
+        var max = Math.max(r, g, b);
+        var v = max / 255;
+        var s = 0;
+        var h = -1;
+        var delta = max - min;
+        
+        if(max !== 0) {
+            s = delta / max;
+            
+            if(r === max) {
+                h = (g - b) / delta;
+            } else if (g === max) {
+                h = 2 + (b - r) / delta;
+            } else {
+                h = 4 + (r - g) / delta;
+            }
+        }
+        
+        h *= 60;
+        
+        while(h < 0) {
+            h += 360;
+        }
+        
+        return {
+            h: h,
+            s: s,
+            v: v
+        };
+    }
+    
     function lightnessGrayscale(r, g, b) {
         // Grayscale by (max(R, G, B) + min(R, G, B)) / 2
+        var value = (Math.max(r, g, b) + Math.min(r, g, b)) / 2;
         return {
-            r: (Math.max(r, g, b) + Math.min(r, g, b)) / 2,
-            g: (Math.max(r, g, b) + Math.min(r, g, b)) / 2,
-            b: (Math.max(r, g, b) + Math.min(r, g, b)) / 2
+            r: value,
+            g: value,
+            b: value
         };
     }
     
     function averageGrayscale(r, g, b) {
         // Grayscale by  (R + G + B) / 3
+        var value = (r + g + b) / 3;
         return {
-            r: (r + g + b) / 3,
-            g: (r + g + b) / 3,
-            b: (r + g + b) / 3
+            r: value,
+            g: value,
+            b: value
         };
     }
     
     function luminosityGrayscale(r, g, b) {
         // Grayscale by 0.21 R + 0.71 G + 0.07 B
+        var value = (r * 0.21 + g * 0.71 + b * 0.07);
         return {
-            r: (r * 0.21 + g * 0.71 + b * 0.07),
-            g: (r * 0.21 + g * 0.71 + b * 0.07),
-            b: (r * 0.21 + g * 0.71 + b * 0.07)
+            r: value,
+            g: value,
+            b: value
         };
     }
     
@@ -86,46 +122,24 @@
         }
     }
     
-    // Request the image
-    function getImage(src) {
-        // Instanciate an image to get the real size (else doesn't work when 
-        // resize for small -> big)
-        var image = new Image();
-        image.src = src;
-        
-        // Define as not loaded
-        var o = { loaded: false};
-        
-        // Add callback
-        image.onload = function() {
-           o.loaded = true; 
-        };
-        
-        // Wait for image loaded
-        while(!o.loaded) { }
-        
-        // Return the image
-        return image;
-    }
-    
     // Request the canvas
     function getCanvas($el) {
         // Instanciating the canvas
         var canvas = document.createElement("canvas");
         
         // Ask for image
-        var image = getImage($el.attr("src"));
+        var image = $el.get(0);
         
         // Adding size
-        canvas.width = image.width;
-        canvas.height = image.height;
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
         
         // Drawing original image
         canvas.getContext("2d").drawImage(image, 0, 0);
         
         // Extracting context and image data
         var ctx = canvas.getContext("2d");
-        var imageData = ctx.getImageData(0, 0, image.width, image.height);
+        var imageData = ctx.getImageData(0, 0, image.naturalWidth, image.naturalHeight);
         
         // return an object of informations
         return {
