@@ -24,6 +24,61 @@
 
 (function($)
 {
+    function HSVtoRGB(h, s, v) {
+        var r, g, b, i, f, p, q, t;
+        
+        if(s === 0) {
+            r = g = b = v;
+        }
+        else
+        {
+            h /= 60;
+
+            i = Math.floor(h);
+            f = h - i;
+            p = v * (1 - s);
+            q = v * (1 - s * f);
+            t = v * (1 - s * (1 - f));
+
+            switch (i) {
+                case 0:
+                    r = v;
+                    g = t;
+                    b = p;
+                    break;
+                case 1:
+                    r = q;
+                    g = v;
+                    b = p;
+                    break;
+                case 2:
+                    r = p;
+                    g = v;
+                    b = t;
+                    break;
+                case 3:
+                    r = p;
+                    g = q;
+                    b = v;
+                    break;
+                case 4:
+                    r = t;
+                    g = p;
+                    b = v;
+                    break;
+                default:
+                    r = v;
+                    g = p;
+                    b = q;
+            }
+        }
+        return {
+            r: Math.round(r * 255) ,
+            g: Math.round(g * 255),
+            b: Math.round(b * 255)
+        };
+    }
+    
     function RGBtoHSV(r, g, b) {
         var min = Math.min(r, g, b);
         var max = Math.max(r, g, b);
@@ -57,78 +112,86 @@
         };
     }
     
-    function lightnessGrayscale(r, g, b) {
+    var lightnessGrayscaleAlgorithm = function(scale, options) {
         // Grayscale by (max(R, G, B) + min(R, G, B)) / 2
-        var value = (Math.max(r, g, b) + Math.min(r, g, b)) / 2;
-        return {
-            r: value,
-            g: value,
-            b: value
-        };
-    }
+        var value = (Math.max(scale.r, scale.g, scale.b) 
+                   + Math.min(scale.r, scale.g, scale.b)) / 2;
+        
+        scale.r = scale.g = scale.b = value;
+    };
     
-    function averageGrayscale(r, g, b) {
+    var averageGrayscaleAlgorithm = function(scale, options) {
         // Grayscale by  (R + G + B) / 3
-        var value = (r + g + b) / 3;
-        return {
-            r: value,
-            g: value,
-            b: value
-        };
-    }
+        var value = (scale.r + scale.g + scale.b) / 3;
+        
+        scale.r = scale.g = scale.b = value;
+    };
     
-    function luminosityGrayscale(r, g, b) {
+    var luminosityGrayscaleAlgorithm = function (scale, options) {
         // Grayscale by 0.21 R + 0.71 G + 0.07 B
-        var value = (r * 0.21 + g * 0.71 + b * 0.07);
-        return {
-            r: value,
-            g: value,
-            b: value
-        };
-    }
+        var value = (scale.r * 0.21 + scale.g * 0.71 + scale.b * 0.07);
+        
+        scale.r = scale.g = scale.b = value;
+    };
     
-    // Handler for grayscale
-    function handlerGrayscale(informations, options) {
-        // Handle all pixels
-        for(var i = 0; i < informations.data.length; i += 4) {
-            var r = informations.data[i];
-            var g = informations.data[i + 1];
-            var b = informations.data[i + 2];
-            
-            // Default scale
-            var scale = {r: r, g: g, b: b};
-            
-            switch(options.mode) {
-                case "lightness":
-                    // Applying lightness grayscale
-                    scale = lightnessGrayscale(r, g, b);
-                    break;
+    var hueAlgorithm = function (scale, options) {
+        var hsv = RGBtoHSV(scale.r, scale.g, scale.b);
+        
+        hsv.h = (hsv.h + options.hue) % 360;
+        
+        if(options.saturation >= 0) {
+            hsv.s = (options.saturation / 100) % 1;
+        }
+        
+        if(options.value >= 0) {
+            hsv.v = (options.value / 100) % 1;
+        }
+        
+        var rgb = HSVtoRGB(hsv.h, hsv.s, hsv.v);
+        
+        scale.r = rgb.r;
+        scale.g = rgb.g;
+        scale.b = rgb.b;
+    };
+    
+    var inverseAlgorithm = function (scale, options) {
+        scale.r = 255 - scale.r;
+        scale.g = 255 - scale.g;
+        scale.b = 255 - scale.b;
+    };
+    
+    
+    // Handler for hue
+    function handlerGrayscale(options) {
+        switch(options.mode) {
+            case "lightness":
+                // Applying lightness grayscale
+                return lightnessGrayscaleAlgorithm;
                 
-                case "luminosity":
-                    // Applying luminosity grayscale
-                    scale = luminosityGrayscale(r, g, b);
-                    break;
+            case "luminosity":
+                // Applying luminosity grayscale
+                return luminosityGrayscaleAlgorithm;
                     
-                case "average":
-                    // Applying average grayscale
-                    scale = averageGrayscale(r, g, b);
-                    break;
-            }
-
-            // Applying scale
-            informations.data[i] = scale.r;
-            informations.data[i + 1] = scale.g;
-            informations.data[i + 2] = scale.b;
+            case "average":
+                // Applying average grayscale
+                return averageGrayscaleAlgorithm;
         }
     }
     
+    // Handler for hue
+    function handlerHue(options) {
+        return hueAlgorithm;
+    }
+    
+    // Handler for inverse
+    function handlerInverse(options) {
+        return inverseAlgorithm;
+    }
+    
     // Request the canvas
-    function getCanvas($el) {
+    function getCanvas(image) {
         // Instanciating the canvas
         var canvas = document.createElement("canvas");
-        
-        // Ask for image
-        var image = $el.get(0);
         
         // Adding size
         canvas.width = image.naturalWidth;
@@ -150,26 +213,103 @@
         };
     }
     
-    function handler($el, parameters) {
-        // Checking if it's an image
-        if($el.is("img")) {
-            // get informations
-            var infos = getCanvas($el);
+    function handler(image, parameters) {
+        // get informations
+        var informations = getCanvas(image);
+
+        var action = function() {};
+
+        // Select the right algorithm
+        switch(parameters.action) {
+            case "grayscale":
+                // Call the grayscale handler
+                action = handlerGrayscale(parameters.options);
+                break;
+
+            case "hue":
+                // Call the hue handler
+                action = handlerHue(parameters.options);
+                break;
+
+            case "inverse":
+                // Call the inverse handler
+                action = handlerInverse(parameters.options);
+                break;
+
+            case "custom":
+                // Call the custom algorithm
+                action = parameters.options;
+                break;
+        }
+
+        // Execute algotihm
+        executeAlgorithm(informations, action, parameters.options);
+
+        // Redraw the canvas
+        informations.context.putImageData(informations.image, 0, 0);
+        
+        // Apply on the image
+        image.src = informations.canvas.toDataURL();
+        
+        return image;
+    }
+    
+    function executeAlgorithm(informations, action, options) {
+        // Handle all pixels
+        for(var i = 0; i < informations.data.length; i += 4) {
+            var r = informations.data[i];
+            var g = informations.data[i + 1];
+            var b = informations.data[i + 2];
+            var a = informations.data[i + 3];
+
+            // Default scale
+            var scale = {r: r, g: g, b: b, a: a};
 
             // handle the action
-            switch(parameters.action) {
-                case "grayscale":
-                    // Call the grayscale handler
-                    handlerGrayscale(infos, parameters.options);
-                    break;
-            }
-
-            // Redraw the canvas
-            infos.context.putImageData(infos.image, 0, 0);
+            action(scale, options);
                 
-            // Apply on the image
-            $el.attr("src", infos.canvas.toDataURL());
+            // Applying scale
+            informations.data[i] = scale.r;
+            informations.data[i + 1] = scale.g;
+            informations.data[i + 2] = scale.b;
+            informations.data[i + 3] = scale.a;
         }
+    }
+    
+    function executeForeach($this, parameters) {
+        
+        // Act for all elements
+        return $this.each(function()
+        {
+            if($(this).is("img")) {
+                // Queue event
+                $(this).queue(function() {
+                    // New image
+                    var image = new Image();
+                    var $el = $(this);
+                    
+                    // Handle load
+                    image.onload = function() {
+                        // Disable callback
+                        this.onload = null;
+                        
+                        // Apply change on image
+                        handler(this, parameters);
+                                                
+                        // When load, call next
+                        $el.one("load", function(){
+                            $el.dequeue();
+                        });
+                        
+                        // Apply on current
+                        $el.attr("src", this.src);
+                    };
+                    
+                    // Copy image from source
+                    image.src = $(this).attr("src");
+                });
+            }
+        });
     }
     
     $.extend($.fn,
@@ -242,12 +382,72 @@
                 options: options
             };
             
+            return executeForeach(this, parameters);
+        },
+        
+        hue: function(options)
+        {
+            var hue = 0;
+            
+            // Check parameter
+            if($.isNumeric(options)) {
+                hue = options;
+            }
+            
+            // Extending default configuration
+            options = $.extend({}, {
+                    hue: hue,
+                    saturation: -1,
+                    value: -1
+                },
+                options
+            );
+            
+            // correct the angle
+            while(options.hue < 0) {
+                options.hue += 360;
+            }
+        
+            // Creating the default parameters for the handler
+            var parameters = {
+                
+                action: "hue",
+                
+                options: options
+            };
+            
             // Act for all elements
-            return this.each(function()
-            {
-                // Handle them
-                handler($(this), parameters);
-            });
+            return executeForeach(this, parameters);
+        },
+        
+        inverse: function(options)
+        {
+            // Creating the default parameters for the handler
+            var parameters = {
+
+                action: "inverse",
+
+                options: options
+            };
+
+            // Act for all elements
+            return executeForeach(this, parameters);
+        },
+        
+        custom: function(options)
+        {
+            if($.isFunction(options)) {
+                // Creating the default parameters for the handler
+                var parameters = {
+
+                    action: "custom",
+
+                    options: options
+                };
+
+                // Act for all elements
+                return executeForeach(this, parameters);
+            }
         }
     });
    

@@ -23,8 +23,5 @@
  */
 
 $(document).ready(function(){
-    $("#grayscale").save();
-    
-    $("#grayscale").grayscale({mode: "average"});
-    
+    $("#grayscale").save().hue(90).hue(90).hue(90).hue(90).hue(90);
 });
