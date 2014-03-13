@@ -41,13 +41,80 @@ THE SOFTWARE.
                 <div class="col-xs-12">
                     <h1>
                         jQuery.Colorimazer
+                        <small><a href="http://caniuse.com/#feat=canvas">Compatible bowser list</a></small>
                     </h1>
                 </div>
             </div>
             
             <div class="row">
                 <div class="col-xs-12">
-                    <img src="img/demo1.jpg" id="grayscale" class="img-responsive" alt="Grayscale"/>
+                    <h2>
+                        Grayscale
+                    </h2>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12 col-sm-6">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <h4>Average</h4>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <img src="img/togray.jpg" id="gray" class="img-responsive" alt="Grayscale by average"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-4">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <h4>Natural</h4>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <img src="img/togray.jpg" id="grayn" class="img-responsive" alt="Grayscale by natural"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-4">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <h4>Luminosity</h4>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <img src="img/togray.jpg" id="graylu" class="img-responsive" alt="Grayscale by luminosity"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-4">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <h4>Lightness</h4>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <img src="img/togray.jpg" id="grayli" class="img-responsive" alt="Grayscale by lightness"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-6">
+                    <h3>Usage</h3>
+                    <p>Easy as possible, <code>.grayscale()</code> is enought!</p>
+                    <pre>$("#gray").grayscale();</pre>
+                    <p>Not the good grayscale? Add an option parameter!</p>
+                    <ul>
+                        <li><code>{ mode: "average" }</code> - <em>Default</em></li>
+                        <li><code>{ mode: "natural" }</code></li>
+                        <li><code>{ mode: "lightness" }</code></li>
+                        <li><code>{ mode: "luminosity" }</code></li>
+                    </ul>
                 </div>
             </div>
         </div>

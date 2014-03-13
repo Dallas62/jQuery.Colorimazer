@@ -23,5 +23,10 @@
  */
 
 $(document).ready(function(){
-    $("#grayscale").save().hue(90).hue(90).hue(90).hue(90).hue(90);
+    
+    $("#gray").grayscale();
+    $("#grayn").grayscale({mode: "natural"});
+    $("#graylu").grayscale({mode: "luminosity"});
+    $("#grayli").grayscale({mode: "lightness"});
+    
 });
