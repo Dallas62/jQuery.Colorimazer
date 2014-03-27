@@ -37,15 +37,34 @@ THE SOFTWARE.
     </head>
     <body>
         <div class="container">
-            <div class="row">
-                <div class="col-xs-12">
+                <div class="page-header">
                     <h1>
+                        <span class="label label-success">New !</span>
                         jQuery.Colorimazer
                         <small><a href="http://caniuse.com/#feat=canvas">Compatible bowser list</a></small>
                     </h1>
                 </div>
+            
+            <div class="row">
+                <div class="col-xs-12">
+                    <h2>
+                        What is it?
+                    </h2>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <p>
+                        jQuery.Colorimazer, is an jQuery Plugin that allows basic color manipulations such as grayscale, inverse, polarize, opacity, hue, colorize...
+                    </p>
+                    <p>
+                        It copies the image in an canvas and allows modification before resourcing the image element.
+                        jQuery.Colorimazer can be chained and applied on many elements.
+                    </p>
+                </div>
             </div>
             
+            <hr>
             <div class="row">
                 <div class="col-xs-12">
                     <h2>
@@ -62,7 +81,7 @@ THE SOFTWARE.
                     </div>
                     <div class="row">
                         <div class="col-xs-12">
-                            <img src="img/togray.jpg" id="gray" class="img-responsive" alt="Grayscale by average"/>
+                            <img src="img/demo.jpg" id="gray" class="img-responsive" alt="Grayscale by average"/>
                         </div>
                     </div>
                     <div class="row">
@@ -74,7 +93,7 @@ THE SOFTWARE.
                             </div>
                             <div class="row">
                                 <div class="col-xs-12">
-                                    <img src="img/togray.jpg" id="grayn" class="img-responsive" alt="Grayscale by natural"/>
+                                    <img src="img/demo.jpg" id="grayn" class="img-responsive" alt="Grayscale by natural"/>
                                 </div>
                             </div>
                         </div>
@@ -86,7 +105,7 @@ THE SOFTWARE.
                             </div>
                             <div class="row">
                                 <div class="col-xs-12">
-                                    <img src="img/togray.jpg" id="graylu" class="img-responsive" alt="Grayscale by luminosity"/>
+                                    <img src="img/demo.jpg" id="graylu" class="img-responsive" alt="Grayscale by luminosity"/>
                                 </div>
                             </div>
                         </div>
@@ -98,7 +117,45 @@ THE SOFTWARE.
                             </div>
                             <div class="row">
                                 <div class="col-xs-12">
-                                    <img src="img/togray.jpg" id="grayli" class="img-responsive" alt="Grayscale by lightness"/>
+                                    <img src="img/demo.jpg" id="grayli" class="img-responsive" alt="Grayscale by lightness"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-4">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <h4>Red</h4>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <img src="img/demo.jpg" id="grayr" class="img-responsive" alt="Grayscale by red value"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-4">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <h4>Blue</h4>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <img src="img/demo.jpg" id="grayg" class="img-responsive" alt="Grayscale by green value"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-4">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <h4>Green</h4>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <img src="img/demo.jpg" id="grayb" class="img-responsive" alt="Grayscale by blue value"/>
                                 </div>
                             </div>
                         </div>
@@ -106,7 +163,9 @@ THE SOFTWARE.
                 </div>
                 <div class="col-xs-12 col-sm-6">
                     <h3>Usage</h3>
-                    <p>Easy as possible, <code>.grayscale()</code> is enought!</p>
+                    <hr />
+                    <h4>Basics</h4>
+                    <p>Easy as possible, <code>.grayscale()</code> is enough!</p>
                     <pre>$("#gray").grayscale();</pre>
                     <p>Not the good grayscale? Add an option parameter!</p>
                     <ul>
@@ -114,7 +173,188 @@ THE SOFTWARE.
                         <li><code>{ mode: "natural" }</code></li>
                         <li><code>{ mode: "lightness" }</code></li>
                         <li><code>{ mode: "luminosity" }</code></li>
+                        <li><code>{ mode: "red" }</code></li>
+                        <li><code>{ mode: "blue" }</code></li>
+                        <li><code>{ mode: "green" }</code></li>
                     </ul>
+                </div>
+            </div>
+            
+            <hr>
+            <div class="row">
+                <div class="col-xs-12">
+                    <h2>
+                        Effect
+                    </h2>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12 col-sm-6">
+                    <h3>Usage</h3>
+                    <hr />
+                    <h4>Inverse</h4>
+                    <p>If you want to inverse your image just do:</p>
+                    <pre>$("#inverse").effect({mode: "inverse"});</pre>
+                    
+                    <hr />
+                    <h4>Solarize</h4>
+                    <p>Maybe you want to solarize?</p>
+                    <ul>
+                        <li><code>{ mode: "solarize" }</code></li>
+                        <li><code>{ mode: "solarize", operator: "greater" }</code></li>
+                        <li><code>{ mode: "solarize", solarize: 25,<br/> intensity: "natural" }</code></li>
+                    </ul>
+                    <ul>
+                        <li><strong>operator</strong> allow you to choose if you want low or higth luminosity solarized</li>
+                        <li><strong>solarize</strong> represent the comparition value of solarization (percent)</li>
+                        <li><strong>intensity</strong> represent the algorithm of light intensity (same as grayscale)</li>
+                    </ul>
+                </div>
+                <div class="col-xs-12 col-sm-6">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <h4>Inverse</h4>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <img src="img/demo.jpg" id="inverse" class="img-responsive" alt="Inverse"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-4">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <h4>Solarize (less)</h4>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <img src="img/demo.jpg" id="solarizeless" class="img-responsive" alt="Solarize by less comparation"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-4">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <h4>Solarize (greater)</h4>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <img src="img/demo.jpg" id="solarizegreater" class="img-responsive" alt="Solarize by greater comparation"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-4">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <h4>Solarize (limit)</h4>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <img src="img/demo.jpg" id="solarizecustom" class="img-responsive" alt="Solarize with custom limit"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <hr>
+            <div class="row">
+                <div class="col-xs-12">
+                    <h2>
+                        Hue
+                    </h2>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12 col-sm-6">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <h4>Hue 180&deg;</h4>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <img src="img/demo.jpg" id="hue180" class="img-responsive" alt="Hue of 180 degrees"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-4">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <h4>Sat -55%</h4>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <img src="img/demo.jpg" id="huesat" class="img-responsive" alt="Hue -55% saturation"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-4">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <h4>Value 40%</h4>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <img src="img/demo.jpg" id="huevalue" class="img-responsive" alt="Hue +40% value"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-4">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <h4>All</h4>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <img src="img/demo.jpg" id="hue180satvalue" class="img-responsive" alt="Hue 180 degrees, +55% saturation, -40% value"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-6">
+                    <h3>Usage</h3>
+                    <hr />
+                    <h4>Basics</h4>
+                    <p>You need to rotate yours colors? You can use <code>$("#hue180").hue(180)</code> to rotate by 180 degrees!</p>
+                    <ul>
+                        <li><strong>mode</strong> mode of application of value</li>
+                        <li><strong>hue</strong> angle of rotation (degrees)</li>
+                        <li><strong>saturation</strong> represent the saturation (percent)</li>
+                        <li><strong>value</strong> represent the value of the color (percent)</li>
+                    </ul>
+                    <hr />
+                    <h4>Modes</h4>
+                    <ul>
+                        <li><strong>add</strong> this mode add a percentage of the maximum value (= value + percent * 255)</li>
+                        <li><strong>multiply</strong> this mode add a percentage of the current value (= value + percent * value)</li>
+                        <li><strong>replace</strong> this mode replace the value (= percent * 255)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <hr>
+            <div class="row">
+                <div class="col-xs-12">
+                    <h2>Here I am!</h2>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12 col-sm-11">
+                    <a href="http://www.tacyniak.fr/">My website!</a>
+                </div>
+                <div class="col-xs-12 col-sm-1">
+                    <a href="https://twitter.com/share" class="twitter-share-button" data-via="Dallas62_Dev" data-lang="fr" data-size="large" data-hashtags="colorimazer">Tweeter</a>
                 </div>
             </div>
         </div>
@@ -122,5 +362,6 @@ THE SOFTWARE.
         <script src="js/libs/twitter-bootstrap/js/bootstrap.min.js"></script>
         <script src="js/libs/jquery-colorimazer/jquery.colorimazer.js"></script>
         <script src="demo.js"></script>
+        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
     </body>
 </html>

@@ -103,39 +103,39 @@
             return {
                 colorize: (function(){
                     // Applying prepend grayscale
-                    var prepend = function(scale, options) {
+                    var prepend = function(pixel, options) {
                         if(typeof options.prepend !== "undefined" &&
                             $.isFunction(options.prepend)) {
-                            options.prepend(scale);
+                            options.prepend(pixel);
                         }
                     };
                     
                     return {
-                        add: function(scale, options) {
-                            prepend(scale, options);
+                        add: function(pixel, options) {
+                            prepend(pixel, options);
                             
-                            scale.r = filterMinMax(scale.r + 255 * options.r, 0, 255);
-                            scale.g = filterMinMax(scale.g + 255 * options.g, 0, 255);
-                            scale.b = filterMinMax(scale.b + 255 * options.b, 0, 255);
+                            pixel.r = filterMinMax(pixel.r + 255 * options.r, 0, 255);
+                            pixel.g = filterMinMax(pixel.g + 255 * options.g, 0, 255);
+                            pixel.b = filterMinMax(pixel.b + 255 * options.b, 0, 255);
                         },
-                        multiply: function(scale, options) {
-                            prepend(scale, options);
+                        multiply: function(pixel, options) {
+                            prepend(pixel, options);
                             
-                            scale.r = filterMinMax(scale.r + scale.r * options.r, 0, 255);
-                            scale.g = filterMinMax(scale.g + scale.g * options.g, 0, 255);
-                            scale.b = filterMinMax(scale.b + scale.b * options.b, 0, 255);
+                            pixel.r = filterMinMax(pixel.r + pixel.r * options.r, 0, 255);
+                            pixel.g = filterMinMax(pixel.g + pixel.g * options.g, 0, 255);
+                            pixel.b = filterMinMax(pixel.b + pixel.b * options.b, 0, 255);
                         },
-                        replace: function(scale, options) {
-                            prepend(scale, options);
+                        replace: function(pixel, options) {
+                            prepend(pixel, options);
                             
                             if(options.r >= 0) {
-                                scale.r = filterMinMax(options.r * 255, 0, 255);
+                                pixel.r = filterMinMax(options.r * 255, 0, 255);
                             }
                             if(options.g >= 0) {
-                                scale.g = filterMinMax(options.g * 255, 0, 255);
+                                pixel.g = filterMinMax(options.g * 255, 0, 255);
                             }
                             if(options.b >= 0) {
-                                scale.b = filterMinMax(options.b * 255, 0, 255);
+                                pixel.b = filterMinMax(options.b * 255, 0, 255);
                             }
                         }
                     };
@@ -144,23 +144,46 @@
                 // effects algorithms
                 effect: (function(){
                     return {
-                        inverse: function(scale) {
-                            scale.r = 255 - scale.r;
-                            scale.g = 255 - scale.g;
-                            scale.b = 255 - scale.b;
+                        inverse: function(pixel) {
+                            pixel.r = 255 - pixel.r;
+                            pixel.g = 255 - pixel.g;
+                            pixel.b = 255 - pixel.b;
                         },
                         
-                        solarize: function(scale, options) {
-                            var intensity = options.intensity(scale);
-                            if(options.operator === "greater" && intensity >= options.solarize) {
-                                scale.r = 255 - scale.r;
-                                scale.g = 255 - scale.g;
-                                scale.b = 255 - scale.b;
-                            } else if(options.operator === "less" && intensity <= options.solarize) {
-                                scale.r = 255 - scale.r;
-                                scale.g = 255 - scale.g;
-                                scale.b = 255 - scale.b;
+                        solarize: function(pixel, options) {
+                            var intensity = options.intensity(pixel);
+                            
+                            if(options.operator === "greater" && intensity >= options.solarize * 2.55  ||
+                               options.operator === "less"    && intensity <= options.solarize * 2.55 ) {
+                                algorithms.effect.inverse(pixel);
                             }
+                        }
+                    };
+                })(),
+                
+                // grayscale algorithms
+                grayscale: (function(){
+                    return {
+                        average: function(pixel) {
+                            pixel.r = pixel.g = pixel.b = algorithms.intensity.average(pixel);
+                        },
+                        lightness: function(pixel) {
+                            pixel.r = pixel.g = pixel.b = algorithms.intensity.lightness(pixel);
+                        },
+                        luminosity: function(pixel) {
+                            pixel.r = pixel.g = pixel.b = algorithms.intensity.luminosity(pixel);
+                        },
+                        natural: function(pixel) {
+                            pixel.r = pixel.g = pixel.b = algorithms.intensity.natural(pixel);
+                        },
+                        red: function(pixel) {
+                            pixel.r = pixel.g = pixel.b = algorithms.intensity.red(pixel);
+                        },
+                        green: function(pixel) {
+                            pixel.r = pixel.g = pixel.b = algorithms.intensity.green(pixel);
+                        },
+                        blue: function(pixel) {
+                            pixel.r = pixel.g = pixel.b = algorithms.intensity.blue(pixel);
                         }
                     };
                 })(),
@@ -168,25 +191,56 @@
                 // Hue algorithms
                 hue: (function(){
                     return {
-                        add: function(scale, options) {
+                        add: function(pixel, options) {
                             // Convert to HSV, add options, convert to RGB
-                            var hsv = RGBtoHSV(scale.r, scale.g, scale.b);
+                            var hsv = RGBtoHSV(pixel.r, pixel.g, pixel.b);
+
+                            hsv.h = (hsv.h + options.hue) % 360;
+
+                            hsv.s = filterMinMax(hsv.s + options.saturation / 100, 0, 1);
+                            hsv.v = filterMinMax(hsv.v + options.value / 100, 0, 1);
+
+                            var rgb = HSVtoRGB(hsv.h, hsv.s, hsv.v);
+
+                            pixel.r = rgb.r;
+                            pixel.g = rgb.g;
+                            pixel.b = rgb.b;
+                        },
+                        multiply: function(pixel, options) {
+                            // Convert to HSV, add options, convert to RGB
+                            var hsv = RGBtoHSV(pixel.r, pixel.g, pixel.b);
+
+                            hsv.h = (hsv.h + options.hue) % 360;
+
+                            hsv.s = filterMinMax(hsv.s + hsv.s * options.saturation / 100, 0, 1);
+                            hsv.v = filterMinMax(hsv.v + hsv.v * options.value / 100, 0, 1);
+                            
+
+                            var rgb = HSVtoRGB(hsv.h, hsv.s, hsv.v);
+
+                            pixel.r = rgb.r;
+                            pixel.g = rgb.g;
+                            pixel.b = rgb.b;
+                        },
+                        replace: function(pixel, options) {
+                            // Convert to HSV, add options, convert to RGB
+                            var hsv = RGBtoHSV(pixel.r, pixel.g, pixel.b);
 
                             hsv.h = (hsv.h + options.hue) % 360;
 
                             if(options.saturation >= 0) {
-                                hsv.s = (options.saturation / 100) % 1;
+                                hsv.s = filterMinMax(options.saturation / 100, 0, 1);
                             }
 
                             if(options.value >= 0) {
-                                hsv.v = (options.value / 100) % 1;
+                                hsv.v =  filterMinMax(options.value / 100, 0, 1);
                             }
 
                             var rgb = HSVtoRGB(hsv.h, hsv.s, hsv.v);
 
-                            scale.r = rgb.r;
-                            scale.g = rgb.g;
-                            scale.b = rgb.b;
+                            pixel.r = rgb.r;
+                            pixel.g = rgb.g;
+                            pixel.b = rgb.b;
                         }
                     };
                 })(),
@@ -194,22 +248,31 @@
                 // intensity algorithms
                 intensity: (function(){
                     return {
-                        average: function(scale) {
+                        average: function(pixel) {
                             // intensity by  (R + G + B) / 3
-                            return (scale.r + scale.g + scale.b) / 3;
+                            return (pixel.r + pixel.g + pixel.b) / 3;
                         },
-                        lightness: function(scale) {
+                        lightness: function(pixel) {
                             // intensity by (max(R, G, B) + min(R, G, B)) / 2
-                            return (Math.max(scale.r, scale.g, scale.b) 
-                                  + Math.min(scale.r, scale.g, scale.b)) / 2;
+                            return (Math.max(pixel.r, pixel.g, pixel.b) 
+                                  + Math.min(pixel.r, pixel.g, pixel.b)) / 2;
                         },
-                        luminosity: function(scale) {
+                        luminosity: function(pixel) {
                             // intensity by 0.2126 R + 0.7152 G + 0.0722 B
-                            return (scale.r * 0.2126 + scale.g * 0.7152 + scale.b * 0.0722);
+                            return (pixel.r * 0.2126 + pixel.g * 0.7152 + pixel.b * 0.0722);
                         },
-                        natural: function(scale) {
+                        natural: function(pixel) {
                             // intensity by 0.299 R + 0.587 G + 0.114 B
-                            return (scale.r * 0.299 + scale.g * 0.587 + scale.b * 0.114);
+                            return (pixel.r * 0.299 + pixel.g * 0.587 + pixel.b * 0.114);
+                        },
+                        red: function(pixel) {
+                            return pixel.r;
+                        },
+                        green: function(pixel) {
+                            return pixel.g;
+                        },
+                        blue: function(pixel) {
+                            return pixel.b;
                         }
                     };
                 })(),
@@ -217,14 +280,14 @@
                 // Opacity algorithms
                 opacity: (function(){
                     return {
-                        add: function(scale, options) {
-                            scale.a = filterMinMax(scale.a + 255 * options.opacity, 0, 255);
+                        add: function(pixel, options) {
+                            pixel.a = filterMinMax(pixel.a + 255 * options.opacity, 0, 255);
                         },
-                        multiply: function(scale, options) {
-                            scale.a = filterMinMax(scale.a  + scale.a * options.opacity, 0, 255);
+                        multiply: function(pixel, options) {
+                            pixel.a = filterMinMax(pixel.a  + pixel.a * options.opacity, 0, 255);
                         },
-                        replace: function(scale, options) {
-                            scale.a = filterMinMax(options.opacity * 255, 0, 255);
+                        replace: function(pixel, options) {
+                            pixel.a = filterMinMax(options.opacity * 255, 0, 255);
                         }
                     };
                 })()
@@ -249,34 +312,74 @@
 
             // return an object of informations
             return {
+                width: image.naturalWidth,
+                height: image.naturalHeight,
                 canvas: canvas,
                 context: ctx,
                 image: imageData,
-                data: imageData.data
+                data: imageData.data,
+                pixel: function(x, y, pixel) {
+                    if(typeof pixel === "undefined") {
+                        // get the pixel
+                        if(x >= 0 && x < this.width &&
+                           y >= 0 && y < this.height) {
+                            
+                            var i = 4 * (y * this.width + x);
+                            
+                            return {
+                                x: x,
+                                y: y,
+                                r: this.data[i],
+                                g: this.data[i + 1],
+                                b: this.data[i + 2],
+                                a: this.data[i + 3]
+                            };
+                        }
+                    } else if(x >= 0 && x < this.width &&
+                              y >= 0 && y < this.height) {
+                        // set the pixel
+                        
+                        var i = 4 * (y * this.width + x);
+                        
+                        this.data[i] = pixel.r;
+                        this.data[i + 1] = pixel.g;
+                        this.data[i + 2] = pixel.b;
+                        this.data[i + 3] = pixel.a;
+                    }
+                    return null;
+                }
             };
         };
         
         // Execute algorithm
-        var execute = function(informations, action, options) {
-            // Handle all pixels
-            for(var i = 0; i < informations.data.length; i += 4) {
-                var r = informations.data[i];
-                var g = informations.data[i + 1];
-                var b = informations.data[i + 2];
-                var a = informations.data[i + 3];
-
-                // Default scale
-                var scale = {r: r, g: g, b: b, a: a};
-
-                // handle the action
-                action(scale, options);
-
-                // Applying scale
-                informations.data[i] = scale.r;
-                informations.data[i + 1] = scale.g;
-                informations.data[i + 2] = scale.b;
-                informations.data[i + 3] = scale.a;
+        var execute = function(informations, algorithm, options) {
+            for(var x = 0; x < informations.width; x++) {
+                
+                for(var y = 0; y < informations.height; y++) {
+                    
+                    // get
+                    var pixel = informations.pixel(x, y);
+                    
+                    // handle the action
+                    algorithm(pixel, options, informations);
+                    
+                    // set
+                    informations.pixel(x, y, pixel);
+                }
             }
+        };
+        
+        var getAlgorithm = function(action, options) {
+            // searching for algorithm
+            if(algorithms.hasOwnProperty(action)) {
+                if(options.hasOwnProperty("mode")) {
+                    if(algorithms[action].hasOwnProperty(options.mode)) {
+                        return algorithms[action][options.mode];
+                    }
+                }
+            }
+            
+            return null;
         };
         
         // Handlers
@@ -286,7 +389,7 @@
                 // get informations
                 var informations = extract(image);
 
-                var algorithm = null;
+                var algorithm = getAlgorithm(action, options);
 
                 // Select the right algorithm
                 switch(action) {
@@ -294,54 +397,27 @@
                         // Call the inverse handler
                         if(typeof options.grayscale !== "undefined" &&
                                   options.grayscale !== "") {
-                            // On ajoute le calque gris
-                            var intensity = this.grayscale({
-                                            mode: options.grayscale
-                                        });
-                        
-                            options.prepend = function(scale) {
-                                scale.r = scale.g = scale.b = intensity(scale);
-                            };
+                              
+                            options.prepend = getAlgorithm("grayscale", {
+                                mode: options.grayscale
+                            });
                         }
-                        algorithm = this.colorize(options);
                         break;
 
                     case "custom":
                         // Call the custom algorithm
-                        algorithm = options;
+                        algorithm = options.fn;
                         break;
                         
-                    case "grayscale":
-                        // Call the grayscale handler
-                        var intensity = this.grayscale(options);
-                        
-                        algorithm = function(scale) {
-                            scale.r = scale.g = scale.b = intensity(scale);
-                        };
-                        break;
-
-                    case "hue":
-                        // Call the hue handler
-                        algorithm = this.hue(options);
-                        break;
-
                     case "effect":
                         // Call the inverse handler
                         if(typeof options.intensity !== "undefined" &&
                                   options.intensity !== "") {
                             // On ajoute le calque gris
-                            options.intensity = 
-                                    this.grayscale({
-                                        mode: options.intensity
-                                    });
+                            options.intensity =  getAlgorithm("intensity", {
+                                mode: options.intensity
+                            });
                         }
-                        // Call the inverse handler
-                        algorithm = this.effect(options);
-                        break;
-
-                    case "opacity":
-                        // Call the inverse handler
-                        algorithm = this.opacity(options);
                         break;
                 }
                 
@@ -355,85 +431,6 @@
 
                     // Apply on the image
                     image.src = informations.canvas.toDataURL();
-                }
-                
-                return image;
-            },
-            
-            // Colorize handler
-            colorize: function(options){
-                switch(options.mode) {
-                    case "replace":
-                        // Applying replace color
-                        return algorithms.colorize.replace;
-
-                    case "add":
-                        // Applying add color
-                        return algorithms.colorize.add;
-
-                    case "multiply":
-                        // Applying multiply color
-                        return algorithms.colorize.multiply;
-                }
-            },
-            
-            // effect handler
-            effect: function(options){
-                switch(options.mode) {
-                    case "inverse":
-                        // Applying inverse
-                        return algorithms.effect.inverse;
-                        
-                    case "solarize":
-                        // Applying inverse
-                        return algorithms.effect.solarize;
-                 }
-            },
-            
-            // Grayscale handler
-            grayscale: function(options){
-                switch(options.mode) {
-                    case "lightness":
-                        // Applying lightness grayscale
-                        return algorithms.intensity.lightness;
-
-                    case "luminosity":
-                        // Applying luminosity grayscale
-                        return algorithms.intensity.luminosity;
-
-                    case "natural":
-                        // Applying natural grayscale
-                        return algorithms.intensity.natural;
-                        
-                    default:
-                        // Applying average grayscale
-                        return algorithms.intensity.average;
-                }
-            },
-            
-            // Hue handler
-            hue: function(options){
-                switch(options.mode) {
-                    case "add":
-                        // Applying hue
-                        return algorithms.hue.add;
-                }
-            },
-            
-            // Opacity handler
-            opacity: function(options){
-                switch(options.mode) {
-                    case "replace":
-                        // Applying replace opacity
-                        return algorithms.opacity.replace;
-
-                    case "add":
-                        // Applying add opacity
-                        return algorithms.opacity.add;
-
-                    case "multiply":
-                        // Applying multiply opacity
-                        return algorithms.opacity.multiply;
                 }
             }
         };
@@ -473,32 +470,54 @@
                 return options;
             },
             
+            custom: function(options) {
+                if($.isFunction(options)) {
+                    options = $.extend({}, {
+                            fn: options
+                        }
+                    );
+                }
+                
+                return $.extend({}, options);
+            },
+            
             grayscale: function(options) {
-                options = $.extend({}, {
+                return $.extend({}, {
                         mode: "average"
                     },
                     options
                 );
-        
-                return options;
             },
+            
             hue: function(options) {
                 var hue = 0;
 
                 // Check parameter
                 if($.isNumeric(options)) {
                     hue = options;
+                } else if($.isPlainObject(options)) {
+                    if(typeof options.mode !== "undefined"){
+                        if(options.mode === "replace") {
+                            // Extending default configuration for replace
+                            options = $.extend({}, {
+                                    saturation: -1,
+                                    value: -1
+                                },
+                                options
+                            );
+                        }
+                    }
                 }
 
                 options = $.extend({}, {
                         mode: "add",
                         hue: hue,
-                        saturation: -1,
-                        value: -1
+                        saturation: 0,
+                        value: 0
                     },
                     options
                 );
-
+                
                 // correct the angle
                 while(options.hue < 0) {
                     options.hue += 360;
@@ -506,30 +525,33 @@
                 
                 return options;
             },
-            inverse: function(options) {
-                options = $.extend({}, {
-                        mode: "inverse"
-                    },
-                    options
-                );
-                
-                return options;
-            },
-            solarize: function(options) {
-                options = $.extend({}, {
-                        mode: "solarize",
-                        intensity: "average",
-                        solarize: 128,
-                        operator: "less"
-                    },
-                    options
-                );
-                
-                return options;
-            },
-            opacity: function(options) {
-                var opacity = 0;
             
+            effect: (function(){
+                return {
+                    inverse: function(options) {
+                        return $.extend({}, {
+                                mode: "inverse"
+                            },
+                            options
+                        );
+                    },
+
+                    solarize: function(options) {
+                        return $.extend({}, {
+                                mode: "solarize",
+                                intensity: "average",
+                                solarize: 50,
+                                operator: "less"
+                            },
+                            options
+                        );
+                    }
+                };
+            })(),
+
+            opacity: function(options) {
+                var opacity = 255;
+
                 // Check parameter
                 if($.isNumeric(options)) {
                     opacity = options;
@@ -543,140 +565,116 @@
                 );
 
                 options.opacity /= 100;
-                
+
                 return options;
             }
         };
     })();
     
-    var each = function($this, action, options) {
+    var each = function(action, options) {
         // Act for all elements
-        return $this.each(function()
-        {
+        return this.queue(function() {
             if($(this).is("img")) {
-                // Queue event
-                $(this).queue(function() {
-                    // New image
-                    var image = new Image();
-                    var $el = $(this);
+                // New image
+                var image = new Image();
+                var $el = $(this);
+                
+                // Handle load
+                image.onload = function() {
                     
-                    // Handle load
-                    image.onload = function() {
-                        // Disable callback
-                        this.onload = null;
+                    // Disable callback
+                    this.onload = null;
                         
-                        // Apply change on image
-                        handlers.colorimazer(this, action, options);
-                                                
+                    // Apply change on image
+                    handlers.colorimazer(this, action, options);
+                    
+                    if($el.attr("src") === this.src) {
+                        
+                        $el.dequeue();
+                        
+                    } else {
                         // When load, call next
-                        $el.one("load", function(){
+                        $el.one("load", function() {
                             $el.dequeue();
                         });
-                        
+
                         // Apply on current
                         $el.attr("src", this.src);
-                    };
-                    
-                    // Copy image from source
-                    image.src = $(this).attr("src");
-                });
+                    }
+                };
+
+                // Copy image from source
+                image.src = $(this).attr("src");
+            } else {
+                $el.dequeue();
             }
         });
-    }
+    };
     
     $.extend($.fn, {
         // SAVE AND RESTORE
         save: function() {
-            // Saving all elements
-            return this.each(function(){
-                // Checking if is already saved element
-                if($(this).hasClass("colorimazer-original-save") === false) {
-                    // Copying element
-                    var copy = $(this).clone();
+            return this.queue(function() {
+                if($(this).is("img") && $(this).attr("src") !== undefined) {
                     
-                    // Changing ID
-                    copy.attr("id", $(this).attr("id") + "-colorimazer");
-                    
-                    // Adding saved element class
-                    copy.addClass("colorimazer-original-save");
-
-                    // Inserting the element
-                    $(this).after(copy);
-                    
-                    // Hiding the element
-                    copy.hide(0);
+                    $(this).attr("data-colorimazer-save", $(this).attr("src"));
                 }
+
+                $(this).dequeue();
             });
         },
 
         restore: function() {
-            // Restoring all elements
-            this.each(function() {
-                // Checking if is saved
-                if($(this).hasClass("colorimazer-original-save") === false) {
-                    
-                    // Trying with the ID of a saved element
-                    $("#" + $(this).attr("id") + "-colorimazer").restore();
-
-                } else {
-                    // Removing the deprecated element
-                    $("#" + $(this).attr("id").replace("-colorimazer", "")).remove();
-                    
-                    // Restoring the element with the right ID
-                    $(this).attr("id", $(this).attr("id").replace("-colorimazer", ""));
-                    
-                    // Displaying the element
-                    $(this).show(0);
-                    
-                    // Removing the class
-                    $(this).removeClass("colorimazer-original-save");
+            return this.queue(function() {
+                
+                if($(this).is("img") && $(this).attr("data-colorimazer-save") !== undefined) {
+                    $(this).attr("src", $(this).attr("data-colorimazer-save"));
                 }
+
+                $(this).dequeue();
             });
-            
-            // Return the new list with the same selector
-            return $(this.selector);
         },
         // END OF SAVE AND RESTORE
         
         // ALGORITHMS
         colorize: function(options) {
-            return each(this, "colorize", 
+            return each.call(this, "colorize", 
                  defaults.colorize(options)
             );
         },
         
         custom: function(options) {
-            if($.isFunction(options)) {
-                return each(this, "custom", options);
-            }
+            return each.call(this, "custom", 
+                defaults.custom(options)
+            );
         },
         
         grayscale: function(options) {
-            return each(this, "grayscale", 
+            return each.call(this, "grayscale", 
                 defaults.grayscale(options)
             );
         },
         
         hue: function(options) {
-            return each(this, "hue", 
+            return each.call(this, "hue", 
                 defaults.hue(options)
             );
         },
         
-        inverse: function(options) {
-            return each(this, "effect", 
-                defaults.inverse(options)
-            );
-        },
-        
-        solarize: function(options) {
-            return each(this, "effect", 
-                defaults.solarize(options)
-            );
+        effect: function(options) {
+            if($.isPlainObject(options)) {
+                if(typeof options.mode !== "undefined") {
+                    if(defaults.effect.hasOwnProperty(options.mode)) {
+                        return each.call(this, "effect",
+                            defaults.effect[options.mode](options)
+                        );
+                    }
+                }
+            }
         },
         
         opacity: function(options) {
-            return each(this, "opacity", 
+            return each.call(this, "opacity", 
                 defaults.opacity(options)
             );
         }

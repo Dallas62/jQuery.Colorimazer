@@ -24,9 +24,28 @@
 
 $(document).ready(function(){
     
+    // Grayscale
     $("#gray").grayscale();
+    
     $("#grayn").grayscale({mode: "natural"});
     $("#graylu").grayscale({mode: "luminosity"});
     $("#grayli").grayscale({mode: "lightness"});
+    $("#grayr").grayscale({mode: "red"});
+    $("#grayb").grayscale({mode: "green"});
+    $("#grayg").grayscale({mode: "blue"});
+    
+    // Effect
+    $("#inverse").effect({mode: "inverse"});
+    
+    $("#solarizeless").effect({mode: "solarize"});
+    $("#solarizegreater").effect({mode: "solarize", operator: "greater"});
+    $("#solarizecustom").effect({mode: "solarize", solarize: 25, intensity: "natural"});
+    
+    // Hue
+    $("#hue180").hue(180);
+    
+    $("#huesat").hue({mode: "add", saturation: -55 });
+    $("#huevalue").hue({mode: "add", value: 40});
+    $("#hue180satvalue").hue({mode: "add", hue: 180, saturation: -55, value: 40});
     
 });
