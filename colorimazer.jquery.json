@@ -28,5 +28,9 @@
     ],
     "dependencies": {
         "jquery": ">=1.5"
-    }
+    },
+    "homepage": "http://colorimazer.tacyniak.fr/",
+    "download": "https://github.com/Dallas62/jQuery.Colorimazer",
+    "docs": "http://colorimazer.tacyniak.fr/",
+    "demo": "http://colorimazer.tacyniak.fr/"
 }
