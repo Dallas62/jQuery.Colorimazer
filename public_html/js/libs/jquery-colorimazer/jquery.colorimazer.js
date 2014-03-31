@@ -29,7 +29,7 @@
         // Algorithms
         var algorithms = (function() {
             // Convert HSV to RGB
-            var HSVtoRGB = function(h, s, v) {
+            function HSVtoRGB(h, s, v) {
                 var r, g, b, i, f, p, q, t;
                 if(s === 0) {
                     r = g = b = v;
@@ -61,7 +61,7 @@
             };
 
             // Convert RGB to HSV
-            var RGBtoHSV = function(r, g, b) {
+            function RGBtoHSV(r, g, b) {
                 var min = Math.min(r, g, b);
                 var max = Math.max(r, g, b);
                 var v = max / 255;
@@ -83,7 +83,7 @@
 
                 h *= 60;
 
-                while(h < 0) {
+                if(h < 0) {
                     h += 360;
                 }
 
@@ -94,7 +94,7 @@
                 };
             };
 
-            var filterMinMax = function(value, min, max) {
+            function filterMinMax(value, min, max) {
                 // min of [434, 255] = 255, max [-213, 0] = 0
                 // so max of [ min of [x, 255], 0] ->  0 <= result <= 255
                 return Math.max(Math.min(value, max), min);
@@ -111,21 +111,21 @@
                     };
                     
                     return {
-                        add: function(pixel, options) {
+                        add: function(pixel, informations, options) {
                             prepend(pixel, options);
                             
                             pixel.r = filterMinMax(pixel.r + 255 * options.r, 0, 255);
                             pixel.g = filterMinMax(pixel.g + 255 * options.g, 0, 255);
                             pixel.b = filterMinMax(pixel.b + 255 * options.b, 0, 255);
                         },
-                        multiply: function(pixel, options) {
+                        multiply: function(pixel, informations, options) {
                             prepend(pixel, options);
                             
                             pixel.r = filterMinMax(pixel.r + pixel.r * options.r, 0, 255);
                             pixel.g = filterMinMax(pixel.g + pixel.g * options.g, 0, 255);
                             pixel.b = filterMinMax(pixel.b + pixel.b * options.b, 0, 255);
                         },
-                        replace: function(pixel, options) {
+                        replace: function(pixel, informations, options) {
                             prepend(pixel, options);
                             
                             if(options.r >= 0) {
@@ -144,17 +144,39 @@
                 // effects algorithms
                 effect: (function(){
                     return {
+                        blur: function(pixel, informations, options) {
+                            var count = 0; var pix = null; var r = 0; var g = 0; var b = 0;
+                            for(var y = -options.radius; y <= options.radius; y += 1) {
+                                for(var x = -options.radius; x <= options.radius; x += 1) {
+                                    if(Math.sqrt( x * x + y * y) <= options.radius) {
+                                        pix = informations.pixel(pixel.x + x, pixel.y + y);
+                                        if(pix !== null) {
+                                            count++;
+                                            r += pix.r;
+                                            g += pix.g;
+                                            b += pix.b;
+                                        }
+                                    }
+                                }
+                            }
+                            if( count !== 0 ) {
+                                pixel.r = r / count;
+                                pixel.g = g / count;
+                                pixel.b = b / count;
+                            }
+                        },
+                        
                         inverse: function(pixel) {
                             pixel.r = 255 - pixel.r;
                             pixel.g = 255 - pixel.g;
                             pixel.b = 255 - pixel.b;
                         },
                         
-                        solarize: function(pixel, options) {
+                        solarize: function(pixel, informations, options) {
                             var intensity = options.intensity(pixel);
                             
-                            if(options.operator === "greater" && intensity >= options.solarize * 2.55  ||
-                               options.operator === "less"    && intensity <= options.solarize * 2.55 ) {
+                            if(options.operator === "greater" && intensity >= options.solarize  ||
+                               options.operator === "less"    && intensity <= options.solarize ) {
                                 algorithms.effect.inverse(pixel);
                             }
                         }
@@ -191,14 +213,14 @@
                 // Hue algorithms
                 hue: (function(){
                     return {
-                        add: function(pixel, options) {
+                        add: function(pixel, informations, options) {
                             // Convert to HSV, add options, convert to RGB
                             var hsv = RGBtoHSV(pixel.r, pixel.g, pixel.b);
 
                             hsv.h = (hsv.h + options.hue) % 360;
 
-                            hsv.s = filterMinMax(hsv.s + options.saturation / 100, 0, 1);
-                            hsv.v = filterMinMax(hsv.v + options.value / 100, 0, 1);
+                            hsv.s = filterMinMax(hsv.s + options.saturation, 0, 1);
+                            hsv.v = filterMinMax(hsv.v + options.value, 0, 1);
 
                             var rgb = HSVtoRGB(hsv.h, hsv.s, hsv.v);
 
@@ -206,14 +228,14 @@
                             pixel.g = rgb.g;
                             pixel.b = rgb.b;
                         },
-                        multiply: function(pixel, options) {
+                        multiply: function(pixel, informations, options) {
                             // Convert to HSV, add options, convert to RGB
                             var hsv = RGBtoHSV(pixel.r, pixel.g, pixel.b);
 
                             hsv.h = (hsv.h + options.hue) % 360;
 
-                            hsv.s = filterMinMax(hsv.s + hsv.s * options.saturation / 100, 0, 1);
-                            hsv.v = filterMinMax(hsv.v + hsv.v * options.value / 100, 0, 1);
+                            hsv.s = filterMinMax(hsv.s + hsv.s * options.saturation, 0, 1);
+                            hsv.v = filterMinMax(hsv.v + hsv.v * options.value, 0, 1);
                             
 
                             var rgb = HSVtoRGB(hsv.h, hsv.s, hsv.v);
@@ -222,18 +244,18 @@
                             pixel.g = rgb.g;
                             pixel.b = rgb.b;
                         },
-                        replace: function(pixel, options) {
+                        replace: function(pixel, informations, options) {
                             // Convert to HSV, add options, convert to RGB
                             var hsv = RGBtoHSV(pixel.r, pixel.g, pixel.b);
 
                             hsv.h = (hsv.h + options.hue) % 360;
 
                             if(options.saturation >= 0) {
-                                hsv.s = filterMinMax(options.saturation / 100, 0, 1);
+                                hsv.s = filterMinMax(options.saturation, 0, 1);
                             }
 
                             if(options.value >= 0) {
-                                hsv.v =  filterMinMax(options.value / 100, 0, 1);
+                                hsv.v =  filterMinMax(options.value, 0, 1);
                             }
 
                             var rgb = HSVtoRGB(hsv.h, hsv.s, hsv.v);
@@ -280,13 +302,13 @@
                 // Opacity algorithms
                 opacity: (function(){
                     return {
-                        add: function(pixel, options) {
+                        add: function(pixel, informations, options) {
                             pixel.a = filterMinMax(pixel.a + 255 * options.opacity, 0, 255);
                         },
-                        multiply: function(pixel, options) {
+                        multiply: function(pixel, informations, options) {
                             pixel.a = filterMinMax(pixel.a  + pixel.a * options.opacity, 0, 255);
                         },
-                        replace: function(pixel, options) {
+                        replace: function(pixel, informations, options) {
                             pixel.a = filterMinMax(options.opacity * 255, 0, 255);
                         }
                     };
@@ -295,7 +317,7 @@
         })();
         
         // Extract informations of the canvas
-        var extract = function(image) {
+        function extract(image) {
             // Instanciating the canvas
             var canvas = document.createElement("canvas");
 
@@ -319,32 +341,27 @@
                 image: imageData,
                 data: imageData.data,
                 pixel: function(x, y, pixel) {
-                    if(typeof pixel === "undefined") {
-                        // get the pixel
-                        if(x >= 0 && x < this.width &&
-                           y >= 0 && y < this.height) {
-                            
-                            var i = 4 * (y * this.width + x);
-                            
-                            return {
-                                x: x,
-                                y: y,
-                                r: this.data[i],
-                                g: this.data[i + 1],
-                                b: this.data[i + 2],
-                                a: this.data[i + 3]
-                            };
-                        }
-                    } else if(x >= 0 && x < this.width &&
-                              y >= 0 && y < this.height) {
-                        // set the pixel
+                    if(x >= 0 && y >= 0 &&
+                       x < this.width && y < this.height) {
+                        // set or get the pixel
                         
                         var i = 4 * (y * this.width + x);
                         
-                        this.data[i] = pixel.r;
-                        this.data[i + 1] = pixel.g;
-                        this.data[i + 2] = pixel.b;
-                        this.data[i + 3] = pixel.a;
+                        if(typeof pixel !== "undefined" ) {
+                            this.data[i] = pixel.r;
+                            this.data[i + 1] = pixel.g;
+                            this.data[i + 2] = pixel.b;
+                            this.data[i + 3] = pixel.a;
+                        } else {
+                            return {
+                                r: this.data[i],
+                                g: this.data[i + 1],
+                                b: this.data[i + 2],
+                                a: this.data[i + 3],
+                                x: x,
+                                y: y
+                            };
+                        }
                     }
                     return null;
                 }
@@ -352,16 +369,16 @@
         };
         
         // Execute algorithm
-        var execute = function(informations, algorithm, options) {
-            for(var x = 0; x < informations.width; x++) {
+        function execute(informations, algorithm, options) {
+            for(var x = 0; x < informations.width; x += 1) {
                 
-                for(var y = 0; y < informations.height; y++) {
+                for(var y = 0; y < informations.height; y += 1) {
                     
                     // get
                     var pixel = informations.pixel(x, y);
                     
                     // handle the action
-                    algorithm(pixel, options, informations);
+                    algorithm(pixel, informations, options);
                     
                     // set
                     informations.pixel(x, y, pixel);
@@ -369,13 +386,11 @@
             }
         };
         
-        var getAlgorithm = function(action, options) {
+        function getAlgorithm(action, options) {
             // searching for algorithm
-            if(algorithms.hasOwnProperty(action)) {
-                if(options.hasOwnProperty("mode")) {
-                    if(algorithms[action].hasOwnProperty(options.mode)) {
-                        return algorithms[action][options.mode];
-                    }
+            if(algorithms.hasOwnProperty(action) && options.hasOwnProperty("mode")) {
+                if(algorithms[action].hasOwnProperty(options.mode)) {
+                    return algorithms[action][options.mode];
                 }
             }
             
@@ -395,8 +410,7 @@
                 switch(action) {
                     case "colorize":
                         // Call the inverse handler
-                        if(typeof options.grayscale !== "undefined" &&
-                                  options.grayscale !== "") {
+                        if(typeof options.grayscale !== "undefined") {
                               
                             options.prepend = getAlgorithm("grayscale", {
                                 mode: options.grayscale
@@ -411,8 +425,7 @@
                         
                     case "effect":
                         // Call the inverse handler
-                        if(typeof options.intensity !== "undefined" &&
-                                  options.intensity !== "") {
+                        if(typeof options.intensity !== "undefined") {
                             // On ajoute le calque gris
                             options.intensity =  getAlgorithm("intensity", {
                                 mode: options.intensity
@@ -422,7 +435,7 @@
                 }
                 
                 // If an algorithm is defined, run it
-                if($.isFunction(algorithm)) {
+                if(typeof algorithm === "function") {
                     // Execute algotihm
                     execute(informations, algorithm, options);
 
@@ -519,15 +532,27 @@
                 );
                 
                 // correct the angle
-                while(options.hue < 0) {
+                if(options.hue < 0) {
                     options.hue += 360;
                 }
+                
+                options.saturation /= 100;
+                options.value /= 100;
                 
                 return options;
             },
             
             effect: (function(){
                 return {
+                    blur: function(options) {
+                        return $.extend({}, {
+                                mode: "blur",
+                                radius: 3
+                            },
+                            options
+                        );
+                    },
+                    
                     inverse: function(options) {
                         return $.extend({}, {
                                 mode: "inverse"
@@ -537,7 +562,7 @@
                     },
 
                     solarize: function(options) {
-                        return $.extend({}, {
+                        options = $.extend({}, {
                                 mode: "solarize",
                                 intensity: "average",
                                 solarize: 50,
@@ -545,6 +570,10 @@
                             },
                             options
                         );
+                        
+                        options.solarize *= 2.55;
+                        
+                        return options;
                     }
                 };
             })(),
@@ -581,7 +610,6 @@
                 
                 // Handle load
                 image.onload = function() {
-                    
                     // Disable callback
                     this.onload = null;
                         
@@ -616,21 +644,17 @@
         save: function() {
             return this.queue(function() {
                 if($(this).is("img") && $(this).attr("src") !== undefined) {
-                    
                     $(this).attr("data-colorimazer-save", $(this).attr("src"));
                 }
-
                 $(this).dequeue();
             });
         },
 
         restore: function() {
             return this.queue(function() {
-                
                 if($(this).is("img") && $(this).attr("data-colorimazer-save") !== undefined) {
                     $(this).attr("src", $(this).attr("data-colorimazer-save"));
                 }
-
                 $(this).dequeue();
             });
         },

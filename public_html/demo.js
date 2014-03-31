@@ -25,6 +25,25 @@
 $(document).ready(function(){
     
     // Grayscale
+//    $("#gray").custom(function(pixel, options, informations) {
+//        var r = 0; var g = 0; var b = 0; var count = 0;
+//        for(var i = -5; i <= 2; i ++) {
+//            for (var j = -4; j <= 0; j++) {
+//                var pix = informations.pixel(pixel.x + i, pixel.y + j);
+//                if(pix !== null) {
+//                    count++;
+//                    r += pix.r;
+//                    g += pix.g;
+//                    b += pix.b;
+//                }
+//            }
+//        }
+//        pixel.r = r / count;
+//        pixel.g = g / count;
+//        pixel.b = b / count;
+//    });
+//    
+    
     $("#gray").grayscale();
     
     $("#grayn").grayscale({mode: "natural"});
@@ -41,11 +60,20 @@ $(document).ready(function(){
     $("#solarizegreater").effect({mode: "solarize", operator: "greater"});
     $("#solarizecustom").effect({mode: "solarize", solarize: 25, intensity: "natural"});
     
+    $("#blur").effect({ mode: "blur" });
+    $("#blur5").effect({ mode: "blur", radius: 5 });
+    $("#blur9").effect({ mode: "blur", radius: 9 });
     // Hue
     $("#hue180").hue(180);
     
-    $("#huesat").hue({mode: "add", saturation: -55 });
-    $("#huevalue").hue({mode: "add", value: 40});
-    $("#hue180satvalue").hue({mode: "add", hue: 180, saturation: -55, value: 40});
+    $("#huesat").hue({ mode: "add", saturation: -55 });
+    $("#huevalue").hue({ mode: "add", value: 40 });
+    $("#hue180satvalue").hue({ mode: "add", hue: 180, saturation: -55, value: 40 });
     
+    // Colorize
+    $("#colorizered").colorize({ g: 25 });
+    
+    $("#colorizegray").colorize({ grayscale: "average", g: 25 });
+    $("#colorizereplace").colorize({ mode: "replace", g: 25 });
+    $("#colorizemultiply").colorize({ mode: "multiply", g: 25 });
 });
