@@ -23,7 +23,8 @@
     
     "licenses": [
         {
-            "type": "MIT"
+            "type": "MIT",
+            "url": "https://github.com/Dallas62/jQuery.Colorimazer/blob/master/LICENSE"
         }
     ],
     "dependencies": {
